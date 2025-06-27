@@ -660,7 +660,7 @@ const App = () => {
                     <FileText className="h-6 w-6 text-white" />
                   </div>
                   <h1 className="text-xl font-bold text-white">
-                    Resume Analyzer
+                    ResumeLens
                   </h1>
                 </div>
               </div>
