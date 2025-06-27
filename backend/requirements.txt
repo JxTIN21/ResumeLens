@@ -10,4 +10,5 @@ textstat==0.7.3
 numpy==1.24.4
 pandas==1.5.3
 scikit-learn==1.2.2
+blis==0.7.9
 gunicorn
