@@ -4,5 +4,5 @@ services:
     env: python
     plan: free
     rootDir: backend
-    buildCommand: pip install --only-binary=:all: -r requirements.txt
-    startCommand: python app.py
+    buildCommand: "pip install --only-binary=:all: -r requirements.txt"
+    startCommand: "python app.py"
