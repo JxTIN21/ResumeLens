@@ -104,11 +104,46 @@ def extract_text_from_docx(file_path):
     text = ""
     try:
         doc = docx.Document(file_path)
+        
+        # Extract text from paragraphs
         for paragraph in doc.paragraphs:
-            text += paragraph.text + "\n"
+            if paragraph.text.strip():  # Only add non-empty paragraphs
+                text += paragraph.text + "\n"
+        
+        # Extract text from tables
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text.strip():
+                        text += cell.text + "\n"
+        
+        # Extract text from headers and footers
+        for section in doc.sections:
+            if section.header:
+                for paragraph in section.header.paragraphs:
+                    if paragraph.text.strip():
+                        text += paragraph.text + "\n"
+            if section.footer:
+                for paragraph in section.footer.paragraphs:
+                    if paragraph.text.strip():
+                        text += paragraph.text + "\n"
+                        
     except Exception as e:
         print(f"Error extracting DOCX: {e}")
-    return text
+        # Try alternative extraction method
+        try:
+            import zipfile
+            with zipfile.ZipFile(file_path, 'r') as zip_file:
+                xml_content = zip_file.read('word/document.xml')
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(xml_content)
+                for elem in root.iter():
+                    if elem.text:
+                        text += elem.text + " "
+        except Exception as e2:
+            print(f"Alternative extraction also failed: {e2}")
+    
+    return text.strip()
 
 # Resume analysis functions
 class ResumeAnalyzer:
@@ -378,15 +413,25 @@ def upload_resume(current_user_id):
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
     
+    # Validate file format
+    try:
+        if filename.lower().endswith('.docx'):
+            # Quick validation that it's a valid docx file
+            doc_test = docx.Document(filepath)
+            doc_test = None  # Release file handle
+    except Exception as e:
+        os.remove(filepath)
+        return jsonify({'message': 'Invalid or corrupted Word document'}), 400
+    
     # Extract text
     if filename.lower().endswith('.pdf'):
         text = extract_text_from_pdf(filepath)
     else:
         text = extract_text_from_docx(filepath)
     
-    if not text.strip():
+    if not text or len(text.strip()) < 10:  # Require at least 10 characters
         os.remove(filepath)
-        return jsonify({'message': 'Could not extract text from file'}), 400
+        return jsonify({'message': 'Could not extract meaningful text from file. Please ensure the file contains text and is not corrupted.'}), 400
     
     # Analyze resume
     analysis = analyzer.analyze_resume(text)
