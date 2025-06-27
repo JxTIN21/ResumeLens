@@ -9,6 +9,6 @@ spacy==3.8.7
 textstat==0.7.3
 numpy==2.2.3
 pandas==2.2.3
-scikit-learn==1.2.2
+scikit-learn==1.6.1
 blis==0.7.9
 gunicorn
